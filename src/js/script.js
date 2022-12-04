@@ -83,8 +83,11 @@
       this.id = id;
       this.data = data;
       this.renderInMenu();
+      this.getElements();
       this.initAccordion();
-      console.log('new Product:', this);
+      this.initOrderForm();
+      this.processOrder();
+      //console.log('new Product:', this);
     }
 
     renderInMenu(){
@@ -98,31 +101,30 @@
       menuContainer.appendChild(this.element);
     }
 
+    getElements(){
+      const thisProduct = this;
+    
+      thisProduct.accordionTrigger = thisProduct.element.querySelector(select.menuProduct.clickable);
+      thisProduct.form = thisProduct.element.querySelector(select.menuProduct.form);
+      thisProduct.formInputs = thisProduct.form.querySelectorAll(select.all.formInputs);
+      thisProduct.cartButton = thisProduct.element.querySelector(select.menuProduct.cartButton);
+      thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
+    }
+
     initAccordion(){
       const thisProduct = this;
-
-      /* find the clickable trigger (the element that should react to clicking) */
-      const clickableTrigger = this.element.querySelector(select.menuProduct.clickable);
-  
-      /* START: add event listener to clickable trigger on event click */
-      clickableTrigger.addEventListener('click', function(event) {
-        /* prevent default action for event */
+      thisProduct.accordionTrigger.addEventListener('click', function(event) {
         event.preventDefault();
-        /* find active product (product that has active class) */
-        const activeProducts = document.querySelectorAll(select.all.menuProductsActive);
-        for(let activeProduct of activeProducts){
-          if(activeProduct != thisProduct.element){
-            activeProduct.classList.remove(classNames.menuProduct.wrapperActive);
-          } 
-        }
-        /* if there is active product and it's not thisProduct.element, remove class active from it */
-        /* toggle active class on thisProduct.element */
+  
+        const activeProduct = document.querySelector(select.all.menuProductsActive);
+        if(activeProduct && activeProduct != thisProduct.element){
+          activeProduct.classList.remove(classNames.menuProduct.wrapperActive);
+        } 
+
         thisProduct.element.classList.toggle(classNames.menuProduct.wrapperActive);
-      
       });
   
     }
   }
-
   app.init();
 }
