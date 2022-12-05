@@ -44,7 +44,7 @@
     amountWidget: {
       defaultValue: 1,
       defaultMin: 1,
-      defaultMax: 9,
+      defaultMax: 10,
     }
   };
 
@@ -86,6 +86,7 @@
       this.getElements();
       this.initAccordion();
       this.initOrderForm();
+      this.initAmountWidget();
       this.processOrder();
       //console.log('new Product:', this);
     }
@@ -110,6 +111,7 @@
       thisProduct.cartButton = thisProduct.element.querySelector(select.menuProduct.cartButton);
       thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
       thisProduct.imageWrapper = thisProduct.element.querySelector(select.menuProduct.imageWrapper);
+      thisProduct.amountWidgetElem = thisProduct.element.querySelector(select.menuProduct.amountWidget);
     }
 
     initAccordion(){
@@ -145,13 +147,22 @@
         thisProduct.processOrder();
       });
     }
+
+    initAmountWidget(){
+      const thisProduct = this;
+
+      thisProduct.amountWidget = new AmountWidget(thisProduct.amountWidgetElem);
+      thisProduct.amountWidgetElem.addEventListener('updated', function(){
+        thisProduct.processOrder();
+      });
+    }
   
     processOrder() {
       const thisProduct = this;
     
       // covert form to object structure e.g. { sauce: ['tomato'], toppings: ['olives', 'redPeppers']}
       const formData = utils.serializeFormToObject(thisProduct.form);
-      console.log('formData ', formData);
+      //console.log('formData ', formData);
     
       // set price to default price
       let price = thisProduct.data.price;
@@ -160,16 +171,16 @@
       for(let paramId in thisProduct.data.params) {
         // determine param value, e.g. paramId = 'toppings', param = { label: 'Toppings', type: 'checkboxes'... }
         const param = thisProduct.data.params[paramId];
-        console.log('paramId ', paramId, 'param ', param);
+        //console.log('paramId ', paramId, 'param ', param);
     
         // for every option in this category
         for(let optionId in param.options) {
           // determine option value, e.g. optionId = 'olives', option = { label: 'Olives', price: 2, default: true }
           const option = param.options[optionId];
-          console.log('optionId ', optionId, 'option ', option);
+          //console.log('optionId ', optionId, 'option ', option);
 
           const activeImage = thisProduct.imageWrapper.querySelector('.' + paramId + '-' + optionId);
-          console.log('activeImage: ', activeImage);
+          //console.log('activeImage: ', activeImage);
 
           const optionSelected = formData[paramId] && formData[paramId].includes(optionId);
 
@@ -195,8 +206,72 @@
       }
     
       // update calculated price in the HTML
-      thisProduct.priceElem.innerHTML = price;
+      price *= thisProduct.amountWidget.value;
+      console.log(price);
+      thisProduct.priceElem.innerHTML = price.toFixed(1);
     }
   }
+
+  class AmountWidget{
+    constructor(element){
+      const thisWidget = this;
+
+      console.log('AmountWidget: ', thisWidget);
+      console.log('constructor arguments:', element);
+
+      thisWidget.getElements(element);
+      thisWidget.setValue(thisWidget.input.value);
+      thisWidget.initActions();
+    }
+
+    getElements(element){
+      const thisWidget = this;
+    
+      thisWidget.element = element;
+      thisWidget.input = thisWidget.element.querySelector(select.widgets.amount.input);
+      thisWidget.linkDecrease = thisWidget.element.querySelector(select.widgets.amount.linkDecrease);
+      thisWidget.linkIncrease = thisWidget.element.querySelector(select.widgets.amount.linkIncrease);
+    }
+
+    setValue(value){
+      const thisWidget = this;
+      const min = settings.amountWidget.defaultMin;
+      const max = settings.amountWidget.defaultMax;
+      thisWidget.value = settings.amountWidget.defaultValue;
+
+      const newValue = parseInt(value);
+      console.log(newValue);
+      if(thisWidget.value !== newValue && !isNaN(newValue) && min <= newValue && max >= newValue) {
+        thisWidget.value = newValue;
+      }
+
+      thisWidget.input.value = thisWidget.value;
+      thisWidget.announce();
+      console.log('this value = ', thisWidget.value);
+    }
+
+    initActions(){
+      const thisWidget = this;
+
+      thisWidget.input.addEventListener('change',function(){
+        thisWidget.setValue(thisWidget.value);
+      });
+      thisWidget.linkDecrease.addEventListener('click', function(){
+        thisWidget.setValue(thisWidget.value - 1);
+      });
+      thisWidget.linkIncrease.addEventListener('click', function(){
+        thisWidget.setValue(thisWidget.value + 1);
+      });
+    }
+
+    announce(){
+      const thisWidget = this;
+
+      const event = new Event('updated');
+      thisWidget.element.dispatchEvent(event);
+
+    }
+  }
+
   app.init();
 }
