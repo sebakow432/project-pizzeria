@@ -170,9 +170,12 @@
         top: 0;
         background: $color-dark;
         opacity: 0.4;
-      }
-
+      }  
     }
+
+    &.selected {
+      background-color: $color-success;
+    }  
   }
 
   [data-table="1"] {
